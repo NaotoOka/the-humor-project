@@ -62,6 +62,10 @@ function CaptionCard({
             <span>{new Date(caption.votedAt).toLocaleDateString('en-US', {
               timeZone: 'America/New_York',
               dateStyle: 'medium'
+            })} at {new Date(caption.votedAt).toLocaleTimeString('en-US', {
+              timeZone: 'America/New_York',
+              hour: 'numeric',
+              minute: '2-digit'
             })}</span>
             <span>
               {caption.michaelVote === 1 ? (
