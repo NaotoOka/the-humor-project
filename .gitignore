@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+schema.sql
+
+# user IDs
+src/lib/userIds.ts

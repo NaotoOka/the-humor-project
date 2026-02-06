@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 
-export default function Home() {
+export default function HelloWorld() {
   const [position, setPosition] = useState({ x: 50, y: 50 });
   const [direction, setDirection] = useState({ x: 1, y: 1 });
   const [hue, setHue] = useState(0);
   const [rotation, setRotation] = useState(0);
   const [scale, setScale] = useState(1);
+  const [time, setTime] = useState(0);
   const [trail, setTrail] = useState<{ x: number; y: number; hue: number }[]>([]);
   const [exploding, setExploding] = useState(false);
   const [particles, setParticles] = useState<{ x: number; y: number; vx: number; vy: number; hue: number }[]>([]);
@@ -52,7 +53,10 @@ export default function Home() {
 
       setHue((prev) => (prev + 3) % 360);
       setRotation((prev) => (prev + 5) % 360);
-      setScale(1 + Math.sin(Date.now() / 200) * 0.3);
+      setTime((prev) => {
+        setScale(1 + Math.sin(prev / 10) * 0.3);
+        return prev + 1;
+      });
 
       setTrail((prev) => {
         const newTrail = [...prev, { x: position.x, y: position.y, hue }];
@@ -67,7 +71,7 @@ export default function Home() {
     }, 20);
 
     return () => clearInterval(interval);
-  }, [direction, position.x, position.y, hue]);
+  }, [direction, position.x, position.y, hue, time]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black">
@@ -137,7 +141,7 @@ export default function Home() {
             key={i}
             style={{
               display: "inline-block",
-              transform: `translateY(${Math.sin(Date.now() / 100 + i) * 10}px)`,
+              transform: `translateY(${Math.sin(time / 5 + i) * 10}px)`,
               color: `hsl(${(hue + i * 30) % 360}, 100%, 60%)`,
             }}
           >
