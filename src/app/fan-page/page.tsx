@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { USER_IDS } from "@/lib/userIds";
+import type { User } from "@supabase/supabase-js";
 
 type FilterType = "timeline";
 
@@ -142,14 +143,26 @@ function DaySection({
 export default function MichaelRogerFanPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterType>("timeline");
+  const [filter] = useState<FilterType>("timeline");
   const [stats, setStats] = useState<TasteStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [groupedCaptions, setGroupedCaptions] = useState<DayGroup[]>([]);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
+  const supabase = createClient();
 
+  // Fetch current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, [supabase.auth]);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/fan-page/login";
+  };
 
   // Fetch taste analysis stats
   useEffect(() => {
@@ -367,6 +380,21 @@ export default function MichaelRogerFanPage() {
       >
         🚨 Report Page!
       </a>
+
+      {/* User Info & Logout */}
+      {user && (
+        <div className="fixed top-4 right-4 z-[100] flex items-center gap-3 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border-2 border-pink-200">
+          <span className="text-sm text-gray-600 font-mono truncate max-w-[150px]">
+            {user.email}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold py-1 px-3 rounded-full transition-all hover:scale-105 active:scale-95"
+          >
+            Logout
+          </button>
+        </div>
+      )}
 
       {/* Obsessive Header */}
       <header className="relative py-12 text-center mb-16">

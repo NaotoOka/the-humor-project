@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 
 export default function HelloWorld() {
+  const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ x: 50, y: 50 });
   const [direction, setDirection] = useState({ x: 1, y: 1 });
   const [hue, setHue] = useState(0);
@@ -12,6 +13,10 @@ export default function HelloWorld() {
   const [trail, setTrail] = useState<{ x: number; y: number; hue: number }[]>([]);
   const [exploding, setExploding] = useState(false);
   const [particles, setParticles] = useState<{ x: number; y: number; vx: number; vy: number; hue: number }[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -141,8 +146,8 @@ export default function HelloWorld() {
             key={i}
             style={{
               display: "inline-block",
-              transform: `translateY(${Math.sin(time / 5 + i) * 10}px)`,
-              color: `hsl(${(hue + i * 30) % 360}, 100%, 60%)`,
+              transform: mounted ? `translateY(${Math.sin(time / 5 + i) * 10}px)` : "translateY(0)",
+              color: mounted ? `hsl(${(hue + i * 30) % 360}, 100%, 60%)` : `hsl(0, 100%, 60%)`,
             }}
           >
             {char === " " ? "\u00A0" : char}
