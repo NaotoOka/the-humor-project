@@ -3,12 +3,18 @@
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
+  const next = searchParams.get("next") || "/home";
 
   const handleGoogleLogin = async () => {
+    // Store the intended destination in a cookie before OAuth redirect
+    document.cookie = `auth_redirect=${next}; path=/; max-age=600`;
+
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -22,29 +28,33 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen pattern-bg flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-3xl shadow-2xl border-4 border-pink-200 p-8 transform -rotate-1">
+    <div className="min-h-screen bg-[var(--secondary-purple)] flex flex-col">
+      <Navbar />
+      <div className="flex items-center justify-center p-6 flex-1">
+      <div className="max-w-lg w-full">
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-purple-400/30 p-12">
           <div className="text-center mb-8">
-            <h1 className="text-4xl blood-text mb-2">
-              Fan Page Access <span className="animate-heartbeat inline-block">💖</span>
-            </h1>
-            <p className="text-pink-400 font-serif italic">
-              Only true fans may enter...
+            <img
+              src="/logo.png"
+              alt="The Humor Project Logo"
+              className="h-28 mx-auto mb-6"
+            />
+                        <p className="text-purple-200 font-medium text-lg">
+              Sign in to join the campus humor community
             </p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm">
+            <div className="bg-red-500/20 border border-red-400/50 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm text-center">
               Authentication failed. Please try again.
             </div>
           )}
 
           <button
             onClick={handleGoogleLogin}
-            className="w-full bg-white border-2 border-gray-200 hover:border-pink-300 rounded-xl px-6 py-4 flex items-center justify-center gap-3 transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-[var(--primary-orange)] hover:bg-[#ff9d5c] rounded-xl px-8 py-5 flex items-center justify-center gap-4 transition-all hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98]"
           >
-            <svg className="w-6 h-6" viewBox="0 0 24 24">
+            <svg className="w-7 h-7" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -62,13 +72,17 @@ function LoginContent() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="text-gray-700 font-medium">Continue with Google</span>
+            <span className="text-white font-bold text-lg">Continue with Google</span>
           </button>
-<p className="text-center text-xs text-pink-300 mt-8 font-mono">
-</p>
+
+          <p className="text-center text-sm text-purple-300 mt-6">
+            By signing in, you agree to share laughs responsibly.
+          </p>
         </div>
-        
       </div>
+      </div>
+
+      <Footer />
     </div>
   );
 }
@@ -77,8 +91,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen pattern-bg flex items-center justify-center">
-          <div className="text-6xl animate-bounce">💖</div>
+        <div className="min-h-screen bg-[var(--secondary-purple)] flex items-center justify-center">
+          <div className="text-4xl animate-pulse text-white">Loading...</div>
         </div>
       }
     >

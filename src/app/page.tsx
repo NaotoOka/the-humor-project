@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 // Generate stars once at module level with fixed seed-like values
 const generateStars = () =>
@@ -96,17 +98,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Animated construction icon */}
-      <div className="relative mb-8 z-10">
-        <div className="text-8xl animate-bounce drop-shadow-glow">🚧</div>
-        <div className="absolute -top-2 -right-2 text-4xl animate-spin-slow">
-          ⚙️
-        </div>
-        <div className="absolute -top-2 -left-2 text-3xl animate-spin-reverse">
-          🔧
-        </div>
-      </div>
-
       {/* Main text with glow effect */}
       <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 text-center z-10 drop-shadow-lg">
         <span className="bg-gradient-to-r from-yellow-200 via-yellow-400 to-orange-500 bg-clip-text text-transparent animate-gradient">
@@ -134,16 +125,37 @@ export default function Home() {
         <p className="text-indigo-200 mb-6 text-xl md:text-2xl">
           In the meantime, enjoy the latest works:
         </p>
+
+        {/* Logo link to home */}
+        <Link
+          href="/home"
+          className="relative z-20 mb-8 group cursor-pointer inline-block"
+        >
+          <div className="relative animate-float">
+            <Image
+              src="/logo.png"
+              alt="Enter Site"
+              width={300}
+              height={300}
+              className="drop-shadow-logo transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-logo-hover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-white/30 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full blur-xl" />
+          </div>
+          <p className="text-center mt-4 text-indigo-200 text-lg font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
+            Click to Enter
+          </p>
+        </Link>
+
         <div className="flex justify-center gap-4">
           <a
             href="/hello-world"
-            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-lg hover:from-indigo-400 hover:to-purple-400 transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105"
+            className="px-6 py-3 bg-sky-200 text-sky-900 font-semibold rounded-lg hover:bg-sky-300 transition-all duration-300 hover:scale-105"
           >
             Hello World
           </a>
           <a
             href="/fan-page"
-            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-lg hover:from-indigo-400 hover:to-purple-400 transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105"
+            className="px-6 py-3 bg-pink-200 text-pink-900 font-semibold rounded-lg hover:bg-pink-300 transition-all duration-300 hover:scale-105"
           >
             Fan Page
           </a>
@@ -358,6 +370,12 @@ export default function Home() {
         }
         .drop-shadow-glow {
           filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
+        }
+        .drop-shadow-logo {
+          filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4)) drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
+        }
+        .drop-shadow-logo-hover {
+          filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.7)) drop-shadow(0 0 60px rgba(168, 85, 247, 0.5)) drop-shadow(0 8px 30px rgba(0, 0, 0, 0.4));
         }
       `}</style>
     </div>
