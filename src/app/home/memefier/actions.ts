@@ -3,6 +3,16 @@
 import { createClient } from "@/lib/supabase/server";
 
 const PIPELINE_API_BASE = "https://api.almostcrackd.ai";
+const SUPPORTED_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+];
+const REQUEST_TIMEOUT_MS = 30000;
+const CAPTION_TIMEOUT_MS = 120000; // Caption generation may take longer due to AI processing
 
 interface PresignedUrlResponse {
   presignedUrl: string;
@@ -23,17 +33,15 @@ async function getAccessToken(): Promise<string | null> {
   return session?.access_token ?? null;
 }
 
-async function getPresignedUploadUrl(contentType: string): Promise<{
+async function getPresignedUploadUrl(
+  token: string,
+  contentType: string
+): Promise<{
   success: boolean;
   data?: PresignedUrlResponse;
   error?: string;
 }> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Not authenticated" };
-    }
-
     const response = await fetch(
       `${PIPELINE_API_BASE}/pipeline/generate-presigned-url`,
       {
@@ -43,6 +51,7 @@ async function getPresignedUploadUrl(contentType: string): Promise<{
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ contentType }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       }
     );
 
@@ -52,25 +61,29 @@ async function getPresignedUploadUrl(contentType: string): Promise<{
       return { success: false, error: "Failed to generate upload URL" };
     }
 
-    const data: PresignedUrlResponse = await response.json();
+    const data = await response.json();
+    if (!data.presignedUrl || !data.cdnUrl) {
+      return { success: false, error: "Invalid response from upload service" };
+    }
     return { success: true, data };
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "Request timed out" };
+    }
     console.error("Presigned URL error:", error);
     return { success: false, error: "Failed to connect to upload service" };
   }
 }
 
-async function registerImageWithPipeline(imageUrl: string): Promise<{
+async function registerImageWithPipeline(
+  token: string,
+  imageUrl: string
+): Promise<{
   success: boolean;
   imageId?: string;
   error?: string;
 }> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Not authenticated" };
-    }
-
     const response = await fetch(
       `${PIPELINE_API_BASE}/pipeline/upload-image-from-url`,
       {
@@ -80,6 +93,7 @@ async function registerImageWithPipeline(imageUrl: string): Promise<{
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ imageUrl, isCommonUse: false }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       }
     );
 
@@ -90,24 +104,28 @@ async function registerImageWithPipeline(imageUrl: string): Promise<{
     }
 
     const data = await response.json();
+    if (!data.imageId) {
+      return { success: false, error: "Invalid response from pipeline service" };
+    }
     return { success: true, imageId: data.imageId };
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "Request timed out" };
+    }
     console.error("Image registration error:", error);
     return { success: false, error: "Failed to connect to pipeline service" };
   }
 }
 
-async function generateCaptions(imageId: string): Promise<{
+async function generateCaptions(
+  token: string,
+  imageId: string
+): Promise<{
   success: boolean;
   captions?: string[];
   error?: string;
 }> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Not authenticated" };
-    }
-
     const response = await fetch(
       `${PIPELINE_API_BASE}/pipeline/generate-captions`,
       {
@@ -117,6 +135,7 @@ async function generateCaptions(imageId: string): Promise<{
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ imageId }),
+        signal: AbortSignal.timeout(CAPTION_TIMEOUT_MS),
       }
     );
 
@@ -126,13 +145,19 @@ async function generateCaptions(imageId: string): Promise<{
       return { success: false, error: "Failed to generate captions" };
     }
 
-    const data: CaptionRecord[] = await response.json();
-    // Extract caption strings from the response array
-    const captions = data.map((record) => record.caption);
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+      return { success: false, error: "Invalid response from caption service" };
+    }
+    const captions = data.map((record: CaptionRecord) => record.caption);
     return { success: true, captions };
   } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return { success: false, error: "Caption generation timed out" };
+    }
     console.error("Caption generation error:", error);
-    return { success: false, error: "Failed to connect to caption service" };
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: `Failed to connect to caption service: ${message}` };
   }
 }
 
@@ -142,8 +167,8 @@ async function uploadImageToPresignedUrl(
   contentType: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Convert base64 to buffer
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    // Convert base64 to buffer - handle data URLs with any content type
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, "");
     const buffer = Buffer.from(base64Data, "base64");
 
     const response = await fetch(uploadUrl, {
@@ -152,6 +177,7 @@ async function uploadImageToPresignedUrl(
         "Content-Type": contentType,
       },
       body: buffer,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -161,6 +187,9 @@ async function uploadImageToPresignedUrl(
 
     return { success: true };
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "Upload timed out" };
+    }
     console.error("Upload error:", error);
     return { success: false, error: "Failed to upload image" };
   }
@@ -175,8 +204,22 @@ export async function processImageAndGenerateCaptions(
   error?: string;
 }> {
   try {
+    // Validate content type
+    if (!SUPPORTED_CONTENT_TYPES.includes(contentType)) {
+      return {
+        success: false,
+        error: `Unsupported image type. Supported types: ${SUPPORTED_CONTENT_TYPES.join(", ")}`,
+      };
+    }
+
+    // Get token once for all API calls
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     // Step 1: Get presigned upload URL
-    const presignedResult = await getPresignedUploadUrl(contentType);
+    const presignedResult = await getPresignedUploadUrl(token, contentType);
     if (!presignedResult.success || !presignedResult.data) {
       return { success: false, error: presignedResult.error || "Failed to get upload URL" };
     }
@@ -194,13 +237,13 @@ export async function processImageAndGenerateCaptions(
     }
 
     // Step 3: Register image with pipeline
-    const registerResult = await registerImageWithPipeline(cdnUrl);
+    const registerResult = await registerImageWithPipeline(token, cdnUrl);
     if (!registerResult.success || !registerResult.imageId) {
       return { success: false, error: registerResult.error || "Failed to register image" };
     }
 
     // Step 4: Generate captions using imageId
-    const captionsResult = await generateCaptions(registerResult.imageId);
+    const captionsResult = await generateCaptions(token, registerResult.imageId);
     if (!captionsResult.success || !captionsResult.captions) {
       return { success: false, error: captionsResult.error || "Failed to generate captions" };
     }

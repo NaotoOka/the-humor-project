@@ -33,9 +33,7 @@ export async function getCaptionsForVoting(): Promise<CaptionForVoting[]> {
   let query = supabase
     .from("captions")
     .select("id, content, image_id")
-    .eq("is_public", true)
-    .order("created_datetime_utc", { ascending: false })
-    .limit(50);
+    .eq("is_public", true);
 
   // Exclude already voted captions if user is logged in
   if (votedCaptionIds.length > 0) {
@@ -72,7 +70,7 @@ export async function getCaptionsForVoting(): Promise<CaptionForVoting[]> {
     }
   });
 
-  return (captions || [])
+  const result = (captions || [])
     .map((caption) => {
       return {
         id: caption.id,
@@ -83,6 +81,14 @@ export async function getCaptionsForVoting(): Promise<CaptionForVoting[]> {
       };
     })
     .filter((caption) => caption.imageUrl && caption.content);
+
+  // Shuffle and return 30 random captions
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result.slice(0, 30);
 }
 
 export async function getCurrentUser() {
