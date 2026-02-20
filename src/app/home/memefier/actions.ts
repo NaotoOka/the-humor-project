@@ -10,19 +10,13 @@ const SUPPORTED_CONTENT_TYPES = [
   "image/webp",
   "image/gif",
   "image/heic",
+  "image/heif",
 ];
 const REQUEST_TIMEOUT_MS = 30000;
-const CAPTION_TIMEOUT_MS = 120000; // Caption generation may take longer due to AI processing
 
 interface PresignedUrlResponse {
   presignedUrl: string;
   cdnUrl: string;
-}
-
-interface CaptionRecord {
-  id: string;
-  caption: string;
-  [key: string]: unknown;
 }
 
 async function getAccessToken(): Promise<string | null> {
@@ -67,7 +61,7 @@ async function getPresignedUploadUrl(
     }
     return { success: true, data };
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+    if (error instanceof Error && error.name === "TimeoutError") {
       return { success: false, error: "Request timed out" };
     }
     console.error("Presigned URL error:", error);
@@ -109,7 +103,7 @@ async function registerImageWithPipeline(
     }
     return { success: true, imageId: data.imageId };
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+    if (error instanceof Error && error.name === "TimeoutError") {
       return { success: false, error: "Request timed out" };
     }
     console.error("Image registration error:", error);
@@ -119,12 +113,17 @@ async function registerImageWithPipeline(
 
 async function generateCaptions(
   token: string,
-  imageId: string
+  imageId: string,
+  retryCount = 0
 ): Promise<{
   success: boolean;
   captions?: string[];
   error?: string;
 }> {
+  const MAX_RETRIES = 2;
+  const startTime = Date.now();
+  console.log(`[generateCaptions] Starting request for imageId: ${imageId} (attempt ${retryCount + 1})`);
+
   try {
     const response = await fetch(
       `${PIPELINE_API_BASE}/pipeline/generate-captions`,
@@ -135,21 +134,46 @@ async function generateCaptions(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ imageId }),
-        signal: AbortSignal.timeout(CAPTION_TIMEOUT_MS),
       }
     );
 
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`[generateCaptions] Response received in ${elapsed}s, status: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Caption generation error:", errorText);
-      return { success: false, error: "Failed to generate captions" };
+      console.error("Caption generation error:", response.status, errorText);
+
+      // Retry on 504 Gateway Timeout
+      if (response.status === 504 && retryCount < MAX_RETRIES) {
+        console.log(`[generateCaptions] Got 504, retrying in 2s...`);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return generateCaptions(token, imageId, retryCount + 1);
+      }
+
+      return {
+        success: false,
+        error: `Failed to generate captions (${response.status}): ${errorText.substring(0, 100)}`
+      };
     }
 
     const data = await response.json();
+    console.log("[generateCaptions] Response data:", JSON.stringify(data, null, 2));
+
     if (!Array.isArray(data)) {
       return { success: false, error: "Invalid response from caption service" };
     }
-    const captions = data.map((record: CaptionRecord) => record.caption);
+
+    // Extract captions - try common field names
+    const captions = data.map((record: Record<string, unknown>) => {
+      return record.caption || record.text || record.content || record.captionText || String(record);
+    }).filter(Boolean) as string[];
+
+    if (captions.length === 0) {
+      console.error("[generateCaptions] No captions extracted. Record structure:", data[0]);
+      return { success: false, error: "No captions found in response" };
+    }
+
     return { success: true, captions };
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
@@ -187,7 +211,7 @@ async function uploadImageToPresignedUrl(
 
     return { success: true };
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+    if (error instanceof Error && error.name === "TimeoutError") {
       return { success: false, error: "Upload timed out" };
     }
     console.error("Upload error:", error);

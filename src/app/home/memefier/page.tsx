@@ -7,6 +7,18 @@ import Footer from "../Footer";
 
 type Step = "upload" | "processing" | "captions";
 
+const SUPPORTED_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+];
+
+const ACCEPT_STRING = SUPPORTED_TYPES.join(",");
+
 export default function MemefierPage() {
   const [step, setStep] = useState<Step>("upload");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -15,40 +27,9 @@ export default function MemefierPage() {
   const [error, setError] = useState<string | null>(null);
   const [processingStatus, setProcessingStatus] = useState<string>("");
 
-  const handleImageSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith("image/")) {
-        setError("Please select an image file");
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        setError("Image must be less than 10MB");
-        return;
-      }
-
-      setError(null);
-      setImageFile(file);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    },
-    []
-  );
-
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
+  const validateAndSetFile = useCallback((file: File) => {
+    if (!SUPPORTED_TYPES.includes(file.type)) {
+      setError("Unsupported image type. Please use JPEG, PNG, WebP, GIF, or HEIC.");
       return;
     }
 
@@ -66,6 +47,23 @@ export default function MemefierPage() {
     };
     reader.readAsDataURL(file);
   }, []);
+
+  const handleImageSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) validateAndSetFile(file);
+    },
+    [validateAndSetFile]
+  );
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      const file = event.dataTransfer.files?.[0];
+      if (file) validateAndSetFile(file);
+    },
+    [validateAndSetFile]
+  );
 
   const handleDragOver = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -150,7 +148,7 @@ export default function MemefierPage() {
               >
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={ACCEPT_STRING}
                   onChange={handleImageSelect}
                   className="hidden"
                   id="image-upload"
