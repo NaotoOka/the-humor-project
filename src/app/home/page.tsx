@@ -27,7 +27,7 @@ export default async function HomePage() {
           <h1 className="mb-4 text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl drop-shadow-lg">
             Your Daily Dose of{" "}
             <span className="text-[var(--primary-orange)] drop-shadow-md decoration-wavy underline decoration-[var(--primary-orange)]/30">
-              Campus Humor
+              Humor
             </span>
           </h1>
           <p className="mx-auto mb-2 max-w-2xl text-lg text-purple-100 font-medium leading-relaxed">

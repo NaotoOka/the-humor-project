@@ -29,10 +29,10 @@ export async function getCaptionsForVoting(): Promise<CaptionForVoting[]> {
     }
   }
 
-  // Fetch captions, excluding ones the user has already voted on
+  // Fetch captions with joined image data
   let query = supabase
     .from("captions")
-    .select("id, content, image_id")
+    .select("id, content, image_id, images(id, url)")
     .eq("is_public", true);
 
   // Exclude already voted captions if user is logged in
@@ -47,35 +47,15 @@ export async function getCaptionsForVoting(): Promise<CaptionForVoting[]> {
     return [];
   }
 
-  console.log("Found captions:", captions?.length);
-
-  // Fetch images separately
-  const imageIds = captions?.map((c) => c.image_id).filter(Boolean) || [];
-  const { data: images, error: imagesError } = await supabase
-    .from("images")
-    .select("id, url")
-    .in("id", imageIds);
-
-  if (imagesError) {
-    console.error("Error fetching images:", imagesError);
-  }
-
-  console.log("Found images:", images?.length);
-
-  // Create a map of image_id -> url
-  const imageMap: Record<string, string> = {};
-  images?.forEach((img) => {
-    if (img.id && img.url) {
-      imageMap[img.id] = img.url;
-    }
-  });
-
   const result = (captions || [])
     .map((caption) => {
+      const images = caption.images as unknown as
+        | { id: string; url: string }
+        | null;
       return {
         id: caption.id,
         content: caption.content ?? "",
-        imageUrl: imageMap[caption.image_id] ?? "",
+        imageUrl: images?.url ?? "",
         imageId: caption.image_id,
         userVote: null, // Always null since we only fetch unvoted captions
       };

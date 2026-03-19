@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { processImageAndGenerateCaptions } from "./actions";
+import { getHumorFlavors, type HumorFlavor } from "./queries";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 import MemeComposer from "./MemeComposer";
 import ProcessingImage from "./ProcessingImage";
 
-type Step = "upload" | "processing" | "captions" | "meme";
+type Step = "flavor" | "upload" | "processing" | "captions" | "meme";
 
 const SUPPORTED_TYPES = [
   "image/jpeg",
@@ -50,13 +51,26 @@ const isHeicFile = (file: File): boolean => {
 };
 
 export default function MemefierPage() {
-  const [step, setStep] = useState<Step>("upload");
+  const [step, setStep] = useState<Step>("flavor");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [captions, setCaptions] = useState<string[]>([]);
   const [selectedCaption, setSelectedCaption] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [processingStatus, setProcessingStatus] = useState<string>("");
+  const [humorFlavors, setHumorFlavors] = useState<HumorFlavor[]>([]);
+  const [selectedFlavor, setSelectedFlavor] = useState<HumorFlavor | null>(null);
+  const [loadingFlavors, setLoadingFlavors] = useState(false);
+
+  useEffect(() => {
+    async function fetchFlavors() {
+      setLoadingFlavors(true);
+      const flavors = await getHumorFlavors();
+      setHumorFlavors(flavors);
+      setLoadingFlavors(false);
+    }
+    fetchFlavors();
+  }, []);
 
   const validateAndSetFile = useCallback(async (file: File) => {
     if (!isValidImageFile(file)) {
@@ -125,6 +139,12 @@ export default function MemefierPage() {
     []
   );
 
+  const selectFlavor = (flavor: HumorFlavor | null) => {
+    setSelectedFlavor(flavor);
+    setError(null);
+    setStep("upload");
+  };
+
   const processImage = async () => {
     if (!selectedImage || !imageFile) {
       setError("Please select an image first");
@@ -138,7 +158,8 @@ export default function MemefierPage() {
     try {
       const result = await processImageAndGenerateCaptions(
         selectedImage,
-        imageFile.type
+        imageFile.type,
+        selectedFlavor?.id
       );
 
       if (!result.success || !result.captions) {
@@ -154,11 +175,12 @@ export default function MemefierPage() {
   };
 
   const reset = () => {
-    setStep("upload");
+    setStep("flavor");
     setSelectedImage(null);
     setImageFile(null);
     setCaptions([]);
     setSelectedCaption(null);
+    setSelectedFlavor(null);
     setError(null);
     setProcessingStatus("");
   };
@@ -187,7 +209,7 @@ export default function MemefierPage() {
               </span>
             </h1>
             <p className="text-purple-200">
-              Upload an image and let AI turn it into a Meme
+              Pick a humor style, upload an image, and let AI turn it into a Meme
             </p>
           </div>
 
@@ -200,11 +222,28 @@ export default function MemefierPage() {
 
           {/* Upload Step */}
           {step === "upload" && (
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              className="border-2 border-dashed border-purple-400/50 rounded-xl p-6 hover:border-[var(--primary-orange)] transition-all cursor-pointer bg-white/5 hover:bg-white/10"
-            >
+            <div className="space-y-4">
+              {/* Selected flavor indicator */}
+              <div className="flex items-center justify-between bg-white/5 rounded-xl p-4">
+                <div>
+                  <p className="text-purple-200 text-sm">Selected flavor:</p>
+                  <p className="text-white font-semibold capitalize">
+                    {selectedFlavor ? selectedFlavor.slug.replace(/-/g, " ") : "🎲 Surprise Me"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStep("flavor")}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Change
+                </button>
+              </div>
+
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                className="border-2 border-dashed border-purple-400/50 rounded-xl p-6 hover:border-[var(--primary-orange)] transition-all cursor-pointer bg-white/5 hover:bg-white/10"
+              >
               <input
                 type="file"
                 accept={ACCEPT_STRING}
@@ -276,6 +315,58 @@ export default function MemefierPage() {
                     </div>
                   </div>
                 </label>
+              )}
+              </div>
+            </div>
+          )}
+
+          {/* Flavor Selection Step */}
+          {step === "flavor" && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-center">
+                Choose a Humor Flavor
+              </h3>
+              <p className="text-purple-200 text-sm text-center">
+                Select a style to influence the generated captions
+              </p>
+
+              {loadingFlavors ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary-orange)]"></div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Random / No preference option */}
+                  <button
+                    onClick={() => selectFlavor(null)}
+                    className="w-full p-4 bg-gradient-to-r from-[var(--primary-orange)]/10 to-white/5 rounded-xl text-left hover:from-[var(--primary-orange)]/20 hover:to-white/10 hover:border-[var(--primary-orange)] border-2 border-[var(--primary-orange)]/20 transition-all group cursor-pointer"
+                  >
+                    <p className="text-white text-lg font-semibold group-hover:text-white/90">
+                      🎲 Surprise Me
+                    </p>
+                    <p className="text-purple-200 text-sm mt-1">
+                      Let AI pick the best humor style for your image
+                    </p>
+                  </button>
+
+                  {/* Flavor options */}
+                  {humorFlavors.map((flavor) => (
+                    <button
+                      key={flavor.id}
+                      onClick={() => selectFlavor(flavor)}
+                      className="w-full p-4 bg-gradient-to-r from-[var(--primary-orange)]/10 to-white/5 rounded-xl text-left hover:from-[var(--primary-orange)]/20 hover:to-white/10 hover:border-[var(--primary-orange)] border-2 border-[var(--primary-orange)]/20 transition-all group cursor-pointer"
+                    >
+                      <p className="text-white text-lg font-semibold group-hover:text-white/90 capitalize">
+                        {flavor.slug.replace(/-/g, " ")}
+                      </p>
+                      {flavor.description && (
+                        <p className="text-purple-200 text-sm mt-1">
+                          {flavor.description}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -349,7 +440,7 @@ export default function MemefierPage() {
                       onClick={reset}
                       className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors"
                     >
-                      New Image
+                      Start Over
                     </button>
                   </div>
                 </div>

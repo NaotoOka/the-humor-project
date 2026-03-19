@@ -114,6 +114,7 @@ async function registerImageWithPipeline(
 async function generateCaptions(
   token: string,
   imageId: string,
+  humorFlavorId?: number,
   retryCount = 0
 ): Promise<{
   success: boolean;
@@ -122,9 +123,14 @@ async function generateCaptions(
 }> {
   const MAX_RETRIES = 2;
   const startTime = Date.now();
-  console.log(`[generateCaptions] Starting request for imageId: ${imageId} (attempt ${retryCount + 1})`);
+  console.log(`[generateCaptions] Starting request for imageId: ${imageId}, humorFlavorId: ${humorFlavorId ?? 'none'} (attempt ${retryCount + 1})`);
 
   try {
+    const requestBody: { imageId: string; humorFlavorId?: number } = { imageId };
+    if (humorFlavorId !== undefined) {
+      requestBody.humorFlavorId = humorFlavorId;
+    }
+
     const response = await fetch(
       `${PIPELINE_API_BASE}/pipeline/generate-captions`,
       {
@@ -133,7 +139,7 @@ async function generateCaptions(
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ imageId }),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -148,7 +154,7 @@ async function generateCaptions(
       if (response.status === 504 && retryCount < MAX_RETRIES) {
         console.log(`[generateCaptions] Got 504, retrying in 2s...`);
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        return generateCaptions(token, imageId, retryCount + 1);
+        return generateCaptions(token, imageId, humorFlavorId, retryCount + 1);
       }
 
       return {
@@ -221,7 +227,8 @@ async function uploadImageToPresignedUrl(
 
 export async function processImageAndGenerateCaptions(
   imageBase64: string,
-  contentType: string
+  contentType: string,
+  humorFlavorId?: number
 ): Promise<{
   success: boolean;
   captions?: string[];
@@ -267,7 +274,7 @@ export async function processImageAndGenerateCaptions(
     }
 
     // Step 4: Generate captions using imageId
-    const captionsResult = await generateCaptions(token, registerResult.imageId);
+    const captionsResult = await generateCaptions(token, registerResult.imageId, humorFlavorId);
     if (!captionsResult.success || !captionsResult.captions) {
       return { success: false, error: captionsResult.error || "Failed to generate captions" };
     }
