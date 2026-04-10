@@ -29,11 +29,11 @@ export async function getCaptionsForVoting(): Promise<CaptionForVoting[]> {
     }
   }
 
-  // Fetch captions with joined image data
+  // Fetch captions with joined image data, filtered by flavor ID 455
   let query = supabase
     .from("captions")
     .select("id, content, image_id, images(id, url)")
-    .eq("is_public", true);
+    .eq("humor_flavor_id", 455);
 
   // Exclude already voted captions if user is logged in
   if (votedCaptionIds.length > 0) {

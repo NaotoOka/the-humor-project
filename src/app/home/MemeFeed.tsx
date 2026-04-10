@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import MemeCard from "./MemeCard";
 import { Meme } from "./meme-queries";
 
@@ -105,6 +106,29 @@ export default function MemeFeed({ memes, isLoggedIn = false }: MemeFeedProps) {
               }`}
           />
         ))}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-12 flex flex-col md:flex-row gap-8 w-full max-w-2xl px-4">
+        <Link
+          href="/home/memefier"
+          className="group flex-1 flex flex-col items-center justify-center bg-[var(--primary-orange)] p-8 rounded-3xl shadow-[0_20px_50px_rgba(255,140,66,0.3)] hover:shadow-[0_20px_60px_rgba(255,140,66,0.4)] transition-all duration-300 hover:-translate-y-2 border-2 border-white/10"
+        >
+          <span className="text-2xl font-black text-white mb-2 tracking-tight">Memefier</span>
+          <p className="text-orange-100 text-sm text-center font-medium opacity-90 leading-tight">
+            Turn your photos into AI-powered memes
+          </p>
+        </Link>
+
+        <Link
+          href="/home/mememeter"
+          className="group flex-1 flex flex-col items-center justify-center bg-white p-8 rounded-3xl shadow-2xl hover:shadow-white/20 transition-all duration-300 hover:-translate-y-2 border-2 border-transparent"
+        >
+          <span className="text-2xl font-black text-[var(--secondary-purple)] mb-2 tracking-tight">MemeMeter</span>
+          <p className="text-purple-600/70 text-sm text-center font-bold leading-tight">
+            Judge the AI humor 
+          </p>
+        </Link>
       </div>
     </div>
   );

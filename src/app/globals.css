@@ -6,7 +6,7 @@
 
   /* Humor App Color Palette */
   --primary-orange: #FF8C42;
-  --secondary-purple: #7B2CBF;
+  --secondary-purple: #9957d3;
   --off-white: #F8F9FA;
   --dark-text: #1A1A1A;
   --hover-lavender: #E0C3FC;
@@ -232,6 +232,7 @@ body {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -246,18 +247,23 @@ body {
   0% {
     top: 0;
   }
+
   50% {
     top: 100%;
   }
+
   100% {
     top: 0;
   }
 }
 
 @keyframes bounce-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-8px);
   }

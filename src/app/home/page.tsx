@@ -22,17 +22,15 @@ export default async function HomePage() {
           <img
             src="/logo.png"
             alt="The Humor Project Logo"
-            className="h-32 mx-auto mb-6"
+            className="h-30 mx-auto mb-4"
           />
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl drop-shadow-lg">
-            Your Daily Dose of{" "}
+          <h1 className="mb-2 text-lg font-extrabold tracking-tight md:text-5xl lg:text-4xl drop-shadow-lg decoration- shadow">
+            Generate Memes with {" "}
             <span className="text-[var(--primary-orange)] drop-shadow-md decoration-wavy underline decoration-[var(--primary-orange)]/30">
-              Humor
+            AI
             </span>
           </h1>
-          <p className="mx-auto mb-2 max-w-2xl text-lg text-purple-100 font-medium leading-relaxed">
-            Generate memes that hit different 
-          </p>
+          
 
           <MemeFeed memes={memes} isLoggedIn={isLoggedIn} />
         </section>

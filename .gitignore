@@ -43,3 +43,6 @@ next-env.d.ts
 # database
 schema.sql
 
+# claude
+CLAUDE.md
+

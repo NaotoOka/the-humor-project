@@ -70,8 +70,8 @@ export default function MemeCard({ meme, isLoggedIn = false }: MemeCardProps) {
             <button
               onClick={handleLikeClick}
               className={`flex items-center gap-1.5 text-sm font-medium transition-colors group/like ${isLoggedIn
-                  ? "text-slate-500 hover:text-[var(--primary-orange)]"
-                  : "text-slate-400 cursor-pointer"
+                ? "text-slate-500 hover:text-[var(--primary-orange)]"
+                : "text-slate-400 cursor-pointer"
                 }`}
               title={isLoggedIn ? "Like this meme" : "Log in to like"}
             >

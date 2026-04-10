@@ -210,7 +210,7 @@ export default function MemeComposer({
             )}
           </div>
           {/* Edit hint */}
-          <p className="text-center font-bold text-purple-200 text-sm mt-2">
+          <p className="text-center font-bold text-white/90 text-md mt-4">
             Click on the caption to edit
           </p>
         </div>
@@ -224,7 +224,7 @@ export default function MemeComposer({
 
             {/* Font Size */}
             <div className="space-y-2">
-              <span className="text-sm text-purple-200">Size</span>
+              <span className="text-sm text-purple-200">Font Size</span>
               <div className="grid grid-cols-4 gap-1.5">
                 {FONT_SIZES.map((size) => (
                   <button
@@ -244,7 +244,7 @@ export default function MemeComposer({
 
             {/* Text Position */}
             <div className="space-y-2">
-              <span className="text-sm text-purple-200">Position</span>
+              <span className="text-sm text-purple-200">Caption Position</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setTextPosition("top")}
@@ -340,7 +340,7 @@ export default function MemeComposer({
       </div>
 
       {/* Bottom Action Buttons */}
-      <div className="flex gap-4 justify-center">
+      <div className="flex gap-4 justify-center -mt-18">
         <button
           onClick={onBack}
           className="py-3 px-5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all border border-white/20 hover:border-white/40 flex items-center justify-center gap-2"

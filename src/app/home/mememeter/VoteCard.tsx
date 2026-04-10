@@ -23,6 +23,24 @@ export default function VoteCard({ caption, isLoggedIn, onVoteSuccess }: VoteCar
     setError(null);
   }, [caption.id, caption.userVote]);
 
+  // Keyboard arrow controls for voting
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isLoggedIn || isPending) return;
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleVote(1); // Upvote
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handleVote(-1); // Downvote
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLoggedIn, isPending, currentVote, caption.id]);
+
   const handleVote = (voteValue: 1 | -1) => {
     if (!isLoggedIn) {
       setError("Please log in to vote");

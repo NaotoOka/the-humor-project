@@ -42,18 +42,18 @@ export default function Navbar() {
           />
         </a>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <a
             href="/home/memefier"
-            className="text-sm font-semibold text-purple-200 transition-colors hover:text-white"
+            className="rounded-lg px-4 py-2 text-m font-bold text-white transition-all hover:bg-white/10 hover:text-white active:scale-95"
           >
-            Generate Memes
+            Memefier
           </a>
           <a
             href="/home/mememeter"
-            className="text-sm font-semibold text-purple-200 transition-colors hover:text-white"
+            className="rounded-lg px-4 py-2 text-m font-bold text-white transition-all hover:bg-white/10 hover:text-white active:scale-95"
           >
-            Rate Memes
+            MemeMeter
           </a>
           {!loading && (
             user ? (
