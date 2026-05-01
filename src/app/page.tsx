@@ -41,8 +41,8 @@ export default function Home() {
 
 
       {/* Main text with glow effect */}
-      <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 text-center z-10 drop-shadow-lg">
-        <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+      <h1 className="text-[3.4375rem] md:text-[4.8125rem] font-bold text-white mb-6 text-center z-10 drop-shadow-lg">
+        <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent animate-gradient">
           The Humor Project
         </span>
       </h1>
@@ -60,29 +60,33 @@ export default function Home() {
             <Image
               src="/logo.png"
               alt="Enter Site"
-              width={350}
-              height={350}
+              width={385}
+              height={385}
               className="drop-shadow-logo transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-logo-hover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-white/30 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full blur-xl" />
           </div>
-          <p className="text-center mt-6 text-indigo-300 text-xl font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 uppercase tracking-widest drop-shadow-lg">
+          <p className="text-center mt-6 text-indigo-300 text-2xl font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 uppercase tracking-widest drop-shadow-lg">
             Click to Enter
           </p>
         </Link>
 
         <div className="flex flex-wrap justify-center gap-6 mt-4">
           <Link
-            href="/hello-world"
-            className="px-8 py-3 bg-gradient-to-r from-orange-400 to-rose-400 text-white font-bold rounded-full hover:from-orange-500 hover:to-rose-500 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] backdrop-blur-sm shadow-lg"
+            href="https://humor-ai-umber.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-9 py-3.5 bg-[#eb9854] text-white text-lg font-bold rounded-full hover:bg-[#d9cdc0] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(232,223,212,0.6)] backdrop-blur-sm shadow-lg"
           >
-            Hello World
+            Humor Flavors
           </Link>
           <Link
-            href="/fan-page"
-            className="px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold rounded-full hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] backdrop-blur-sm shadow-lg"
+            href="https://humor-project-admin-three.vercel.app/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-9 py-3.5 bg-[#7f49d6] text-white text-lg font-bold rounded-full hover:bg-[#6a3bb8] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(127,73,214,0.6)] backdrop-blur-sm shadow-lg"
           >
-            Fan Page
+            Admin Portal
           </Link>
         </div>
       </div>
